@@ -47,46 +47,47 @@ namespace InsertionPlugin
         errorText = $"Box Number should be between 1 and {saveFileEditor.SAV.BoxCount}";
         hadError = true;
       }
-
       if (slotNum < 1 || slotNum > saveFileEditor.SAV.BoxSlotCount)
       {
         if (errorText.Length > 0) errorText += "\n";
         errorText += $"Slot Number should be between 1 and {saveFileEditor.SAV.BoxSlotCount}";
         hadError = true;
       }
-
       if (hadError)
       {
         ShowErrorMessageBox(errorText);
         return;
       }
 
-      int boxIndex = (boxNum - 1) * saveFileEditor.SAV.BoxSlotCount + (slotNum - 1);
-      PKM prevMon = saveFileEditor.SAV.GetBoxSlotAtIndex(boxIndex), currMon = saveFileEditor.SAV.BlankPKM;
-      if (prevMon.Species != (int)Species.None)
-      {
-        saveFileEditor.SAV.SetBoxSlotAtIndex(saveFileEditor.SAV.BlankPKM, boxIndex);
-        boxIndex++;
-        while (boxIndex < saveFileEditor.SAV.SlotCount)
-        {
-          currMon = saveFileEditor.SAV.GetBoxSlotAtIndex(boxIndex);
-          saveFileEditor.SAV.SetBoxSlotAtIndex(prevMon, boxIndex, PKMImportSetting.UseDefault, PKMImportSetting.Skip);
-          if (currMon.Species == (int)Species.None) break;
-          prevMon = currMon;
-          boxIndex++;
-        }
-        // TODO: Handle undoing changes if last Pokémon if would be erased.
-        if (currMon.Species != (int)Species.None)
-        {
-          ShowErrorMessageBox($"Box {saveFileEditor.SAV.BoxCount} Slot {saveFileEditor.SAV.BoxSlotCount} was erased");
-        }
-        saveFileEditor.ReloadSlots();
-        Close();
-      }
-      else
+      int startIndex = (boxNum - 1) * saveFileEditor.SAV.BoxSlotCount + (slotNum - 1);
+      PKM currMon = saveFileEditor.SAV.GetBoxSlotAtIndex(startIndex), nextMon;
+      if(currMon.Species == (int)Species.None)
       {
         ShowErrorMessageBox($"Box {boxNum} Slot {slotNum} is already empty");
+        return;
       }
+      int boxIndex = startIndex + 1;
+      while (boxIndex < saveFileEditor.SAV.SlotCount)
+      {
+        currMon = saveFileEditor.SAV.GetBoxSlotAtIndex(boxIndex);
+        if (currMon.Species == (int)Species.None) break;
+        boxIndex++;
+      }
+      if(boxIndex == saveFileEditor.SAV.SlotCount)
+      {
+        ShowErrorMessageBox($"There are no empty slots after Box {boxNum} Slot {slotNum}");
+        return;
+      }
+      currMon = saveFileEditor.SAV.GetBoxSlotAtIndex(startIndex);
+      saveFileEditor.SAV.SetBoxSlotAtIndex(saveFileEditor.SAV.BlankPKM, startIndex);
+      for (int index = startIndex + 1; index <= boxIndex; index++)
+      {
+        nextMon = saveFileEditor.SAV.GetBoxSlotAtIndex(index);
+        saveFileEditor.SAV.SetBoxSlotAtIndex(currMon, index, PKMImportSetting.UseDefault, PKMImportSetting.Skip);
+        currMon = nextMon;
+      }
+      saveFileEditor.ReloadSlots();
+      Close();
     }
 
     [GeneratedRegex("[^0-9]")]
