@@ -1,4 +1,4 @@
-# PKHeX Insertion Plugin
+# PKHeX Insertion Plugin (Archived; moved to [PKHeXPluginPile](https://github.com/foohyfooh/PKHeXPluginPile))
 
 The purpose of this [PKHeX](https://github.com/kwsch/PKHeX) plugin is to insert an empty slot in your save file.
 
